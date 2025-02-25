@@ -1,0 +1,105 @@
+create database Lesson12
+
+--easy level
+SELECT ASCII('A')
+
+SELECT LEN('Hello World')
+
+SELECT REVERSE('OpenAI')
+
+SELECT SPACE(5) + 'YourString'
+
+SELECT LTRIM(' SQL Server')
+
+SELECT UPPER('sql')
+
+SELECT LEFT('Database', 3)
+
+SELECT RIGHT('Technology', 4)
+
+SELECT SUBSTRING('Programming', 3, 4)
+
+SELECT CONCAT('SQL', 'Server')
+
+SELECT REPLACE('apple pie', 'apple', 'orange')
+
+SELECT CHARINDEX('learn', 'Learn SQL with LearnSQL')
+
+SELECT CHARINDEX('er', 'Server');
+
+SELECT value FROM STRING_SPLIT('apple,orange,banana', ',')
+
+SELECT POWER(2, 3)
+
+SELECT POWER(2, 3)
+
+SELECT SQRT(16)
+
+SELECT GETDATE()
+
+SELECT GETUTCDATE()
+
+SELECT DAY('2025-02-03')
+
+SELECT DATEADD(DAY, 10, '2025-02-03')
+
+--Medium level
+
+SELECT CHAR(65)
+
+SELECT LTRIM('  Hello  ')
+SELECT RTRIM('  Hello  ')
+
+SELECT CHARINDEX('SQL', 'Learn SQL basics')
+
+SELECT CONCAT_WS(',', 'SQL', 'Server')
+
+SELECT STUFF('Unit test', 6, 4, 'exam')
+
+SELECT SQUARE(7)
+
+SELECT LEFT('International', 5)
+
+SELECT RIGHT('Database', 2)
+
+SELECT PATINDEX('%n%', 'Learn SQL')
+
+SELECT DATEDIFF(DAY, '2025-01-01', '2025-02-03')
+
+SELECT MONTH('2025-02-03')
+
+SELECT DATEPART(YEAR, '2025-02-03')
+
+SELECT CONVERT(TIME, GETDATE())
+
+SELECT SYSDATETIME()
+
+SELECT DATEADD(DAY, (7 - DATEPART(WEEKDAY, GETDATE()) + 4) % 7, GETDATE())
+
+SELECT GETDATE() AS LocalTime, GETUTCDATE() AS UTCTime
+
+SELECT ABS(-15)
+
+SELECT CEILING(4.57)
+
+SELECT CURRENT_TIMESTAMP
+
+SELECT DATENAME(WEEKDAY, '2025-02-03')
+
+--difficult level
+--1
+SELECT REPLACE(REVERSE('SQL Server'), ' ', '')
+--4
+SELECT POWER(5, 3)
+
+SELECT value FROM STRING_SPLIT('apple;orange;banana', ';')
+
+SELECT TRIM(' SQL ')
+
+SELECT DATEDIFF(HOUR, '2025-02-24 08:00:00', '2025-02-25 12:00:00')
+
+SELECT DATEDIFF(MONTH, '2023-05-01', '2025-02-03')
+
+SELECT LEN('Learn SQL Server') - CHARINDEX('LQS', REVERSE('Learn SQL Server')) + 1
+
+SELECT value FROM STRING_SPLIT('apple,orange,banana', ',')
