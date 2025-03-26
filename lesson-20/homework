@@ -1,0 +1,279 @@
+----easy level
+-------1
+select *, 
+SUM(salesamount) over (order by SaleDate)
+from Sales
+---------2
+select *,
+SUM(amount) over (order by customer) from Orders
+----3
+SELECT *,
+       SUM(OrderAmount) OVER (PARTITION BY CustomerID ORDER BY OrderDate) AS RunningTotal
+FROM Orders;
+------4
+SELECT *,
+       AVG(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS RunningAvg
+FROM Sales;
+----5
+SELECT OrderID, OrderAmount, 
+       RANK() OVER (ORDER BY OrderAmount DESC) AS Rank
+FROM Orders;
+-----6
+SELECT ProductID, SaleDate, SalesAmount,
+       LEAD(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS NextAmount
+FROM Sales;
+-----7
+SELECT CustomerID, OrderID, OrderAmount,
+       SUM(OrderAmount) OVER (PARTITION BY CustomerID) AS TotalSales
+FROM Orders;
+----8
+SELECT OrderID, CustomerID, OrderDate,
+       COUNT(*) OVER (PARTITION BY CustomerID ORDER BY OrderDate) AS OrderCount
+FROM Orders;
+-----9
+SELECT ProductCategory, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY ProductCategory ORDER BY SaleDate) AS RunningTotal
+FROM Sales;
+--------10
+SELECT OrderID, CustomerID, OrderDate,
+       ROW_NUMBER() OVER (ORDER BY OrderDate) AS OrderRank
+FROM Orders;
+---11
+SELECT OrderID, CustomerID, OrderAmount,
+       LAG(OrderAmount) OVER (PARTITION BY CustomerID ORDER BY OrderDate) AS PreviousOrderAmount
+FROM Orders;
+-------12
+SELECT ProductID, ProductName, Price,
+       NTILE(4) OVER (ORDER BY Price) AS PriceGroup
+FROM Products;
+-------13
+SELECT EmployeeID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY EmployeeID ORDER BY SaleDate) AS CumulativeSales
+FROM Sales;
+------14
+SELECT ProductID, ProductName, StockQuantity,
+       DENSE_RANK() OVER (ORDER BY StockQuantity DESC) AS StockRank
+FROM Products;
+--------15
+SELECT OrderID, OrderAmount,
+       LEAD(OrderAmount) OVER (ORDER BY OrderDate) - OrderAmount AS AmountDiff
+FROM Orders;
+------16
+SELECT ProductID, ProductName, Price,
+       RANK() OVER (ORDER BY Price DESC) AS PriceRank
+FROM Products;
+-----17
+SELECT CustomerID, OrderAmount,
+       AVG(OrderAmount) OVER (PARTITION BY CustomerID) AS AvgOrderAmount
+FROM Orders;
+---------18
+SELECT EmployeeID, EmployeeName, Salary,
+       ROW_NUMBER() OVER (ORDER BY Salary DESC) AS SalaryRank
+FROM Employees;
+-------19
+SELECT StoreID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY StoreID ORDER BY SaleDate) AS CumulativeTotal
+FROM Sales;
+-----20
+SELECT OrderID, OrderAmount,
+       LAG(OrderAmount) OVER (ORDER BY OrderDate) AS PreviousAmount
+FROM Orders;
+
+
+------Medium
+------1
+SELECT StoreID, ProductID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY StoreID, ProductID ORDER BY SaleDate) AS RunningTotal
+FROM Sales;
+-----2
+SELECT OrderID, OrderAmount,
+       (LEAD(OrderAmount) OVER (ORDER BY OrderDate) - OrderAmount) * 100.0 / OrderAmount AS PercentageChange
+FROM Orders;
+-----3
+WITH ProductRank AS (
+    SELECT ProductID, SUM(SalesAmount) AS TotalSales,
+           ROW_NUMBER() OVER (ORDER BY SUM(SalesAmount) DESC) AS Rank
+    FROM Sales
+    GROUP BY ProductID
+)
+SELECT * FROM ProductRank WHERE Rank <= 3;
+----4
+SELECT EmployeeID, EmployeeName, DepartmentID, Salary,
+       RANK() OVER (PARTITION BY DepartmentID ORDER BY Salary DESC) AS SalaryRank
+FROM Employees;
+-----5
+SELECT *, NTILE(10) OVER (ORDER BY OrderAmount DESC) AS SalesPercentile
+FROM Orders
+WHERE SalesPercentile = 1;
+-------6
+SELECT ProductID, SaleDate, SalesAmount,
+       SalesAmount - LAG(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS SalesDiff
+FROM Sales;
+--------7
+SELECT ProductID, SaleDate, SalesAmount,
+       AVG(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS CumulativeAvg
+FROM Sales;
+-------8
+SELECT ProductID, SUM(SalesAmount) AS TotalSales,
+       DENSE_RANK() OVER (ORDER BY SUM(SalesAmount) DESC) AS Rank
+FROM Sales
+GROUP BY ProductID;
+-----9
+SELECT OrderID, OrderAmount,
+       LAG(OrderAmount) OVER (ORDER BY OrderDate) AS PreviousAmount,
+       LEAD(OrderAmount) OVER (ORDER BY OrderDate) AS NextAmount
+FROM Orders;
+------10
+SELECT StoreID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY StoreID ORDER BY SaleDate) AS CumulativeTotal
+FROM Sales;
+--------11
+SELECT EmployeeID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY EmployeeID ORDER BY SaleDate) AS CumulativeTotal
+FROM Sales;
+---12
+SELECT ProductID, SaleDate, SalesAmount,
+       LEAD(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS NextSales
+FROM Sales;
+-------13
+SELECT ProductID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS MovingSum
+FROM Sales;
+---14
+SELECT EmployeeID, EmployeeName, Salary,
+       RANK() OVER (ORDER BY Salary DESC) AS SalaryRank
+FROM Employees
+WHERE SalaryRank <= 3;
+-------15
+SELECT CustomerID, AVG(OrderAmount) AS AvgOrderAmount
+FROM Orders
+GROUP BY CustomerID;
+-------16
+SELECT OrderID, CustomerID, OrderDate,
+       ROW_NUMBER() OVER (ORDER BY OrderDate) AS OrderRank
+FROM Orders;
+----17
+SELECT EmployeeID, DepartmentID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY DepartmentID, EmployeeID ORDER BY SaleDate) AS RunningTotal
+FROM Sales;
+----18
+SELECT EmployeeID, EmployeeName, Salary,
+       NTILE(5) OVER (ORDER BY Salary) AS SalaryGroup
+FROM Employees;
+---19
+SELECT ProductID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS CumulativeSales,
+       SUM(SalesAmount) OVER (PARTITION BY ProductID) AS TotalSales
+FROM Sales;
+-----20
+SELECT ProductID, SUM(SalesAmount) AS TotalSales,
+       DENSE_RANK() OVER (ORDER BY SUM(SalesAmount) DESC) AS Rank
+FROM Sales
+GROUP BY ProductID
+HAVING Rank <= 5;
+
+
+-----Difficult 
+----1
+SELECT StoreID, ProductID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY StoreID, ProductID ORDER BY SaleDate) AS RunningTotal
+FROM Sales;
+---------2
+SELECT OrderID, OrderAmount,
+       LEAD(OrderAmount) OVER (ORDER BY OrderDate) AS NextOrderAmount,
+       (LEAD(OrderAmount) OVER (ORDER BY OrderDate) - OrderAmount) * 100.0 / OrderAmount AS PercentageChange
+FROM Orders;
+--------3
+WITH RankedProducts AS (
+    SELECT ProductID, SUM(SalesAmount) AS TotalSales,
+           ROW_NUMBER() OVER (ORDER BY SUM(SalesAmount) DESC) AS Rank
+    FROM Sales
+    GROUP BY ProductID
+)
+SELECT * FROM RankedProducts WHERE Rank <= 3;
+--------4
+SELECT EmployeeID, EmployeeName, DepartmentID, Salary,
+       RANK() OVER (PARTITION BY DepartmentID ORDER BY Salary DESC) AS SalaryRank
+FROM Employees;
+-------5
+WITH RankedOrders AS (
+    SELECT OrderID, OrderAmount,
+           NTILE(10) OVER (ORDER BY OrderAmount DESC) AS OrderPercentile
+    FROM Orders
+)
+SELECT * FROM RankedOrders WHERE OrderPercentile = 1;
+-------6
+SELECT ProductID, SaleDate, SalesAmount,
+       SalesAmount - LAG(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS ChangeInSales
+FROM Sales;
+------7
+SELECT ProductID, SaleDate, SalesAmount,
+       AVG(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS CumulativeAvg
+FROM Sales;
+---------8
+WITH RankedProducts AS (
+    SELECT ProductID, SUM(SalesAmount) AS TotalSales,
+           DENSE_RANK() OVER (ORDER BY SUM(SalesAmount) DESC) AS Rank
+    FROM Sales
+    GROUP BY ProductID
+)
+SELECT * FROM RankedProducts WHERE Rank <= 5;
+--------9
+SELECT ProductCategory, ProductID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY ProductCategory ORDER BY SaleDate) AS RunningTotal
+FROM Sales;
+---------10
+SELECT OrderID, OrderAmount,
+       LAG(OrderAmount) OVER (ORDER BY OrderDate) AS PreviousOrderAmount,
+       LEAD(OrderAmount) OVER (ORDER BY OrderDate) AS NextOrderAmount,
+       OrderAmount - LAG(OrderAmount) OVER (ORDER BY OrderDate) AS DiffWithPrev,
+       LEAD(OrderAmount) OVER (ORDER BY OrderDate) - OrderAmount AS DiffWithNext
+FROM Orders;
+----------11
+SELECT EmployeeID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY EmployeeID ORDER BY SaleDate) AS CumulativeSales
+FROM Sales;
+---------12
+SELECT ProductID, ProductName, Price,
+       NTILE(10) OVER (ORDER BY Price) AS PriceGroup
+FROM Products;
+--------13
+SELECT OrderID, OrderAmount,
+       AVG(OrderAmount) OVER (ORDER BY OrderDate ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS MovingAvg
+FROM Orders;
+------14
+SELECT EmployeeID, EmployeeName, DepartmentID, Salary,
+       ROW_NUMBER() OVER (PARTITION BY DepartmentID ORDER BY Salary DESC) AS SalaryRank
+FROM Employees;
+---15
+SELECT CustomerID, COUNT(*) AS OrderCount
+FROM Orders
+GROUP BY CustomerID;
+--------16
+WITH RankedProducts AS (
+    SELECT ProductID, SUM(SalesAmount) AS TotalSales,
+           RANK() OVER (ORDER BY SUM(SalesAmount) DESC) AS Rank
+    FROM Sales
+    GROUP BY ProductID
+)
+SELECT * FROM RankedProducts WHERE Rank <= 3;
+-----17
+SELECT EmployeeID, ProductID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY EmployeeID, ProductID ORDER BY SaleDate) AS CumulativeSales
+FROM Sales;
+-----18
+WITH RankedEmployees AS (
+    SELECT EmployeeID, DepartmentID, SUM(SalesAmount) AS TotalSales,
+           DENSE_RANK() OVER (PARTITION BY DepartmentID ORDER BY SUM(SalesAmount) DESC) AS Rank
+    FROM Sales
+    GROUP BY EmployeeID, DepartmentID
+)
+SELECT * FROM RankedEmployees WHERE Rank = 1;
+-----19
+SELECT StoreID, SaleDate, SalesAmount,
+       SUM(SalesAmount) OVER (PARTITION BY StoreID ORDER BY SaleDate) AS RunningTotal
+FROM Sales;
+----20
+SELECT ProductID, SaleDate, SalesAmount,
+       SalesAmount - LAG(SalesAmount) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS SalesDifference
+FROM Sales;
