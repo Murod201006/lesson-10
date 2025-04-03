@@ -1,0 +1,213 @@
+-----1
+MERGE INTO Employees AS e
+USING NewEmployees AS ne
+ON e.EmployeeID = ne.EmployeeID
+WHEN MATCHED THEN
+    UPDATE SET e.Name = ne.Name, e.Position = ne.Position, e.Salary = ne.Salary
+WHEN NOT MATCHED THEN
+    INSERT (EmployeeID, Name, Position, Salary)
+    VALUES (ne.EmployeeID, ne.Name, ne.Position, ne.Salary);
+-----------2
+MERGE INTO OldProducts AS op
+USING CurrentProducts AS cp
+ON op.ProductID = cp.ProductID
+WHEN NOT MATCHED BY SOURCE THEN
+    DELETE;
+--------3
+MERGE INTO Employees AS e
+USING NewSalaryDetails AS ns
+ON e.EmployeeID = ns.EmployeeID
+WHEN MATCHED AND ns.Salary > e.Salary THEN
+    UPDATE SET e.Salary = ns.Salary;
+-------4
+MERGE INTO Orders AS o
+USING NewOrders AS no
+ON o.OrderID = no.OrderID AND o.CustomerID = no.CustomerID
+WHEN MATCHED AND no.OrderAmount > o.OrderAmount THEN
+    UPDATE SET o.OrderAmount = no.OrderAmount
+WHEN NOT MATCHED THEN
+    INSERT (OrderID, CustomerID, OrderAmount, OrderDate)
+    VALUES (no.OrderID, no.CustomerID, no.OrderAmount, no.OrderDate);
+----------5
+MERGE INTO StudentRecords AS sr
+USING (SELECT * FROM NewStudentRecords WHERE Age > 18) AS ns
+ON sr.StudentID = ns.StudentID
+WHEN MATCHED THEN
+    UPDATE SET sr.Name = ns.Name, sr.Age = ns.Age, sr.Grade = ns.Grade
+WHEN NOT MATCHED THEN
+    INSERT (StudentID, Name, Age, Grade)
+    VALUES (ns.StudentID, ns.Name, ns.Age, ns.Grade);
+
+-- Log actions
+INSERT INTO MergeLog (ActionType, StudentID, Timestamp)
+SELECT 
+    CASE 
+        WHEN sr.StudentID IS NULL THEN 'INSERT'
+        ELSE 'UPDATE'
+    END,
+    ns.StudentID,
+    CURRENT_TIMESTAMP
+FROM NewStudentRecords ns
+LEFT JOIN StudentRecords sr ON ns.StudentID = sr.StudentID
+WHERE ns.Age > 18;
+
+--------1
+CREATE VIEW SalesSummary AS
+SELECT 
+    CustomerID, 
+    COUNT(OrderID) AS NumberOfOrders, 
+    SUM(SalesAmount) AS TotalSales
+FROM Orders
+GROUP BY CustomerID;
+
+------------2
+CREATE VIEW EmployeeDepartmentDetails AS
+SELECT 
+    e.EmployeeID, 
+    e.FirstName, 
+    e.LastName, 
+    e.Position, 
+    d.DepartmentName
+FROM Employees e
+JOIN Departments d ON e.DepartmentID = d.DepartmentID;
+
+------3
+CREATE VIEW InventoryStatus AS
+SELECT 
+    p.ProductID, 
+    p.ProductName, 
+    p.StockQuantity, 
+    CASE 
+        WHEN p.StockQuantity = 0 THEN 'Out of Stock'
+        WHEN p.StockQuantity < 10 THEN 'Low Stock'
+        ELSE 'In Stock'
+    END AS StockStatus
+FROM Products p;
+
+----------4
+CREATE FUNCTION fn_GetFullName (@FirstName NVARCHAR(50), @LastName NVARCHAR(50))
+RETURNS NVARCHAR(101)
+AS
+BEGIN
+    RETURN @FirstName + ' ' + @LastName;
+END;
+
+SELECT dbo.fn_GetFullName('John', 'Doe');
+
+------------5
+CREATE FUNCTION fn_GetHighSales (@Threshold DECIMAL(10,2))
+RETURNS TABLE
+AS
+RETURN 
+(
+    SELECT OrderID, CustomerID, SalesAmount
+    FROM Orders
+    WHERE SalesAmount > @Threshold
+);
+
+SELECT * FROM dbo.fn_GetHighSales(500);
+
+------6
+CREATE FUNCTION fn_GetCustomerStats ()
+RETURNS @CustomerStats TABLE
+(
+    CustomerID INT PRIMARY KEY,
+    TotalOrders INT,
+    TotalSales DECIMAL(10,2),
+    AvgOrderValue DECIMAL(10,2)
+)
+AS
+BEGIN
+    INSERT INTO @CustomerStats
+    SELECT 
+        CustomerID, 
+        COUNT(OrderID) AS TotalOrders, 
+        SUM(SalesAmount) AS TotalSales, 
+        AVG(SalesAmount) AS AvgOrderValue
+    FROM Orders
+    GROUP BY CustomerID;
+    
+    RETURN;
+END;
+
+SELECT * FROM dbo.fn_GetCustomerStats();
+
+--------2
+SELECT 
+    CustomerID, 
+    OrderID, 
+    SalesAmount, 
+    SUM(SalesAmount) OVER (PARTITION BY CustomerID ORDER BY OrderDate) AS CumulativeSales
+FROM Orders;
+
+-- Using Window Function
+SELECT 
+    EmployeeID, 
+    DepartmentID, 
+    Salary, 
+    AVG(Salary) OVER (PARTITION BY DepartmentID) AS AvgSalary
+FROM Employees;
+
+-- Using GROUP BY (Less Flexible)
+SELECT 
+    DepartmentID, 
+    AVG(Salary) AS AvgSalary
+FROM Employees
+GROUP BY DepartmentID;
+
+-----3
+SELECT 
+    ProductCategory, 
+    ProductID, 
+    SalesAmount, 
+    SUM(SalesAmount) OVER (PARTITION BY ProductCategory ORDER BY SaleDate) AS CumulativeRevenue
+FROM Sales;
+
+SELECT 
+    ProductCategory, 
+    SUM(SalesAmount) AS TotalRevenue
+FROM Sales
+GROUP BY ProductCategory;
+
+--------4
+SELECT 
+    StudentID, 
+    Name, 
+    TestScore, 
+    ROW_NUMBER() OVER (ORDER BY TestScore DESC) AS Rank
+FROM Students;
+
+SELECT 
+    StudentID, 
+    Name, 
+    TestScore, 
+    RANK() OVER (ORDER BY TestScore DESC) AS Rank
+FROM Students;
+
+------5
+  SELECT 
+    StockID, 
+    TradeDate, 
+    Price, 
+    Price - LAG(Price) OVER (PARTITION BY StockID ORDER BY TradeDate) AS PriceChange
+FROM StockPrices;
+
+SELECT 
+    StockID, 
+    TradeDate, 
+    Price, 
+    Price - LEAD(Price) OVER (PARTITION BY StockID ORDER BY TradeDate) AS NextDayPriceChange
+FROM StockPrices;
+
+------6
+SELECT 
+    CustomerID, 
+    TotalSpending, 
+    NTILE(4) OVER (ORDER BY TotalSpending DESC) AS SpendingQuartile
+FROM Customers;
+
+SELECT 
+    CustomerID, 
+    TotalSpending, 
+    NTILE(5) OVER (ORDER BY TotalSpending DESC) AS SpendingQuintile
+FROM Customers;
