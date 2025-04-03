@@ -1,0 +1,178 @@
+-- 1
+WITH ProductSales AS (
+    SELECT 
+        p.id, 
+        p.product_name, 
+        SUM(s.salesamount) AS total_sales
+    FROM Sales s
+    JOIN products p ON s.productcategory = p.category_id
+    GROUP BY p.id, p.product_name
+),
+RankedProducts AS (
+    SELECT *,
+           RANK() OVER (ORDER BY total_sales DESC) AS sales_rank,
+           COUNT(*) OVER () AS total_products
+    FROM ProductSales
+)
+SELECT * 
+FROM RankedProducts
+WHERE sales_rank > total_products * 0.1;
+
+-----2
+SELECT *, 
+       ROW_NUMBER() OVER (ORDER BY hiredate) AS row_num
+FROM Employees
+WHERE DATEDIFF(YEAR, hiredate, GETDATE()) > 5;
+
+-----3
+SELECT *, 
+       NTILE(10) OVER (ORDER BY salary) AS salary_group
+FROM Employees;
+
+---4
+SELECT *, 
+       LEAD(salesamount) OVER (PARTITION BY employeeid ORDER BY sale_month) AS next_sales_amount,
+       salesamount - LEAD(salesamount) OVER (PARTITION BY employeeid ORDER BY sale_month) AS sales_difference
+FROM Sales;
+
+
+------5
+SELECT category_id, 
+       AVG(price) AS avg_price
+FROM Products
+GROUP BY category_id;
+
+
+----6
+WITH ProductSales AS (
+    SELECT p.id, p.product_name, SUM(s.salesamount) AS total_sales
+    FROM Sales s
+    JOIN products p ON s.productcategory = p.category_id
+    GROUP BY p.id, p.product_name
+)
+SELECT *, 
+       RANK() OVER (ORDER BY total_sales DESC) AS sales_rank
+FROM ProductSales
+WHERE sales_rank <= 3;
+
+
+-------7
+WITH RankedEmployees AS (
+    SELECT *, 
+           ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS salary_rank
+    FROM Employees
+)
+SELECT * FROM RankedEmployees
+WHERE salary_rank <= 5;
+
+------8
+SELECT *, 
+       (LAG(salesamount, 2) OVER (ORDER BY sale_month) + LAG(salesamount, 1) OVER (ORDER BY sale_month) + 
+        salesamount + 
+        LEAD(salesamount, 1) OVER (ORDER BY sale_month) + LEAD(salesamount, 2) OVER (ORDER BY sale_month)) / 5 AS moving_avg
+FROM Sales;
+
+----9
+WITH ProductSales AS (
+    SELECT p.id, p.product_name, SUM(s.salesamount) AS total_sales
+    FROM Sales s
+    JOIN products p ON s.productcategory = p.category_id
+    GROUP BY p.id, p.product_name
+)
+SELECT *, 
+       DENSE_RANK() OVER (ORDER BY total_sales DESC) AS sales_rank
+FROM ProductSales
+WHERE sales_rank <= 5;
+
+
+-------10
+SELECT *, 
+       NTILE(4) OVER (ORDER BY orderamount) AS quartile
+FROM Orders;
+
+-----------11
+SELECT *, 
+       ROW_NUMBER() OVER (PARTITION BY customerid ORDER BY orderdate) AS order_rank
+FROM Orders;
+
+
+-----12
+SELECT department, 
+       COUNT(*) AS total_employees
+FROM Employees
+GROUP BY department;
+
+
+
+-----13
+WITH RankedSalaries AS (
+    SELECT *, 
+           RANK() OVER (PARTITION BY department ORDER BY salary DESC) AS top_rank,
+           RANK() OVER (PARTITION BY department ORDER BY salary ASC) AS bottom_rank
+    FROM Employees
+)
+SELECT * FROM RankedSalaries
+WHERE top_rank <= 3 OR bottom_rank <= 3;
+
+
+--------14
+SELECT *, 
+       (salesamount - LAG(salesamount) OVER (PARTITION BY employeeid ORDER BY sale_month)) * 100.0 / 
+       NULLIF(LAG(salesamount) OVER (PARTITION BY employeeid ORDER BY sale_month), 0) AS percent_change
+FROM Sales;
+
+
+------------15
+SELECT *, 
+       SUM(salesamount) OVER (PARTITION BY productcategory ORDER BY sale_month) AS cumulative_sales,
+       AVG(salesamount) OVER (PARTITION BY productcategory ORDER BY sale_month) AS cumulative_avg_sales
+FROM Sales;
+
+
+
+
+
+--------------16
+SELECT *, 
+       NTILE(3) OVER (ORDER BY age) AS age_group
+FROM Employees;
+
+
+------17
+WITH EmployeeSales AS (
+    SELECT employeeid, SUM(salesamount) AS total_sales
+    FROM Sales
+    GROUP BY employeeid
+)
+SELECT *, 
+       ROW_NUMBER() OVER (ORDER BY total_sales DESC) AS sales_rank
+FROM EmployeeSales
+WHERE sales_rank <= 10;
+
+
+
+--------18
+SELECT *, 
+       LEAD(price) OVER (ORDER BY price) - price AS price_difference
+FROM Products;
+
+
+
+-------19
+SELECT *, 
+       DENSE_RANK() OVER (ORDER BY performance_score DESC) AS performance_rank
+FROM Employees;
+
+
+
+--------20
+SELECT *, 
+       salesamount - LAG(salesamount) OVER (PARTITION BY productcategory ORDER BY sale_month) AS prev_diff,
+       LEAD(salesamount) OVER (PARTITION BY productcategory ORDER BY sale_month) - salesamount AS next_diff
+FROM Sales;
+
+
+
+
+
+  
